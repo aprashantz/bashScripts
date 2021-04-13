@@ -1,0 +1,207 @@
+#!/bin/bash
+
+function last_question() { #to know if user want to restart program or exit
+	echo -n "Do you want to restart program? [yes/no]:- "
+	read demand
+	case $demand in
+	"no")
+		line_design
+		echo -e "\t\t <<<GOOD BYE>>>"
+		line_design
+		sleep 2
+		exit;;
+	"yes")
+		enter_program;;
+	*)
+		last_question;; # when user gives beyond input of yes or no
+	esac
+}
+
+function sleep_exit() { #to sleep a second and exit
+	sleep 1
+	exit
+}
+
+function line_design(){
+	echo "________________________________________________"
+}
+
+function loading_design(){ #to make a loading design
+	local loaded=0
+	while [ "$loaded" -le 100 ]
+	do
+		line_design
+		echo -e "\t\tLoading $loaded%...."
+		line_design
+		sleep 0.001
+		((loaded++))
+		clear
+	done
+}
+
+function check_player() { #to prevent user from giving values beyond provided options
+	case $1 in
+	"LM")
+		return 0;;
+	"NJ")
+		return 0;;
+	"KC")
+		return 0;;
+	"HK")
+		return 0;;
+	"ZZ")
+		return 0;;
+	*)
+		return 1;;
+	esac
+}
+
+function ask_secretKey(){ #this function is used to ask secret key.
+	echo -n "Secret Key of Program:- "
+	read -s secret_key
+	sleep 1
+}
+
+function ask_countryCode(){ #this function is used to ask country code.
+	echo -n "Country code of best country:- "
+	read country_code
+}
+
+function ask_playersCode(){ #this function is used to ask three players code
+	echo -e "Give three player's code separated by spaces\nExample: (LM NJ HK)"
+	echo -n "Three players code:- "
+	read player1 player2 player3
+}
+
+guess_bestCountry(){ #handles  country guessing related works
+	echo -e "\nWe have five country info below"
+	echo "From here, type the country code of that country which you think is the best"
+	echo "Or has won highest number of football worldcups"
+	line_design
+	echo -e "\nCode\tCountry"
+	echo -e "BRZ\tBrazil\nARG\tArgentina\nNEP\tNepal\nCHI\tChina\nENG\tEngland"
+	line_design
+	ask_countryCode
+
+	until [ "$country_code" = "BRZ" ] #to ask user to guess unless correct option
+	do
+		echo -e "Sorry, your guess is not correct.\nPlease try again."
+		echo -e "Or, you might not typed country code in upper case\n"
+		ask_countryCode
+	done
+
+	# condition when country code is right below
+	clear
+	sleep 1
+	echo -e "\nYes, you are right. Brazil is the best football team"
+	echo "Brazil has won five worldcups."
+	echo "Pele, Ronaldinho, Garrincha, Romario, Zico, Neymar Jr are the popular Brazilian players "
+	echo -e "Thiago Silva is the current captain of the Brazilian Football team\n"
+	sleep 1
+}
+
+choose_players(){ #handle players choosing related works
+	line_design
+	echo "We have five players info below"
+	line_design
+	echo -e "Code\tPlayer"
+	echo -e "LM\tLionel Messi\nNJ\tNeymar Junior\nKC\tKiran Chemjong\nZZ\tZheng Zhi\nHK\tHarry Kane"
+	line_design
+	ask_playersCode
+	if check_player "$player1" = 0 && check_player "$player2" = 0 && check_player "$player3" = 0
+	then #when user gives three players code from listed options only
+		if [ "$player1" = "$player2" ] || [ "$player1" = "$player3" ] || [ "$player2" = "$player3" ]
+		then # to prevent user from choosing same player multiple times
+			echo -e "Same player cannot be choosen multiple times.\nChoose again"
+			choose_players
+		else
+			echo -e "Player1: $player1\nPlayer2: $player2\nPlayer3: $player3"
+			line_design
+			echo "Now, choose number of your single favourite player's code."
+		fi
+	else #when user gives players code in wrong format or from beyond list.
+		clear
+		sleep 1
+		echo "You can choose players code from given options only."
+		choose_players
+	fi
+}
+
+select_player(){ #handles sellecting single player from options and provide players info if right player 
+	PS3="Number of the choosen code from list:- "
+	select player in "$player1" "$player2" "$player3"
+	do
+		if  [[ -z "$player" ]] #to force user to pick player number from three options only
+		then
+			echo "You can choose from provided options only."
+		elif ! [ -r $player ]  # if file of the selected player is not found
+		then
+			echo "The file does not exist or maynot be readable"
+			enter_program
+		else
+			line_design
+			cat "$player"
+			line_design
+			last_question # to ask last question after displaying player's detail
+		fi	
+	done
+}
+
+enter_program(){ # this acts like [goto statement], to reach this main part of program by calling it
+	guess_bestCountry	#calling 1st task of the program which is choosing country
+	choose_players #calling 2nd task which is choosing players
+	select_player #calling 3rd task which is selecting player among three and displaying player details
+	last_question #calling last task which is asking user if they want to restart or exit		
+}
+
+#############main program below#######################
+
+if [ $# -eq 2 ] && [ "$1" = "Prashant" ] && [ "$2" = "19031371" ] #to check user provided valid arguments or not
+then
+	clear
+	echo -e "\n\n||--Welcome to CourseworkII PartII--||\n"
+	sleep 1
+	ask_secretKey
+
+	key_open_chance=4 #to give user only 4 attempts to guess
+
+	until  [ "$secret_key" = "peace" ] #condition when user doesnot give  right key
+	do
+		clear # removing previous mistake entries makes program clean
+		echo -e "\nWrong secret key"
+		echo -e "You have $key_open_chance chance to guess now. Right secret key is (peace)"
+		((key_open_chance--)) # to reduce guess limit if guess is wrong
+		if [ "$key_open_chance" = "-1" ] # to kick user if they cross guess limit
+		then
+			echo "You are kicked from the program due to over trying"
+			sleep 1
+			exit
+		else
+			ask_secretKey
+		fi
+	done
+	clear
+	loading_design #calling function to make a design
+	echo -e "\nYour login session information below:"
+	echo -e "Name: $1\nID Number: $2"
+	sleep 1
+	echo -e "Current Date and Time: $(date)"
+	sleep 1
+
+	enter_program # entering program after login
+
+elif [ $# -eq 0 ] #if user does not give any argument
+then
+	echo -e "You did not give any arguments\nProvide correct name and id as arguments to run"
+	sleep_exit
+
+elif [[ $# -eq 1 || $# -gt 2 ]]  #if user does not give two argument
+then
+	echo "Only two parameters are accepted. You provided $# arguments."
+	echo "The program needs exact two arguments (name and id) to start"
+	sleep_exit
+
+else #to stop program if user doesnot provide valid arguments
+	echo -e "$1 and $2 are not correct name and id\nPlease try again"
+	sleep_exit
+fi
